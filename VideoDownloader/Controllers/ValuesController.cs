@@ -1,8 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using YoutubeExplode;
-using YoutubeExplode.Videos.Streams;
-using static System.Net.WebRequestMethods;
+﻿using Microsoft.AspNetCore.Mvc;
+using VideoDownloader.Logic;
 
 
 
@@ -12,38 +9,18 @@ namespace VideoDownloader.Controllers
     [Route("api/[controller]")]
     public class ValuesController : ControllerBase
     {
-        [HttpGet("Download/{url}")]
-        public async Task<IActionResult> GetById(string url)
+        [HttpPost("AddToDownload")]
+        public async Task<IActionResult> AddToDownload([FromBody] Request model)
         {
-            url = "https://www.youtube.com/watch?v=GVQON-muEFc";
+            /*var url = "https://www.youtube.com/watch?v=GVQON-muEFc";*/
+            var url = model.Url;
+            var id = Globals.DownloadManager.AddToQueue(url);
 
-            await Downloader.ASD(url);
-
-            return new JsonResult(new { url });
+            return new JsonResult(new { downloadId = id });;
         }
     }
-    public class Downloader
-    {
-        public static async Task ASD(string url)
-        {
-
-            var youtube = new YoutubeClient();
-
-            // You can specify either the video URL or its ID
-            var videoUrl = "https://www.youtube.com/watch?v=GVQON-muEFc";
-            var video = await youtube.Videos.GetAsync(videoUrl);
-
-            var title = video.Title;
-            var author = video.Author.ChannelTitle;
-            var duration = video.Duration; 
-
-            var streamManifest = await youtube.Videos.Streams.GetManifestAsync(videoUrl);
-            var streamInfo = streamManifest.GetMuxedStreams().GetWithHighestVideoQuality();
-
-
-            await youtube.Videos.Streams.DownloadAsync(streamInfo, "cc_track.srt");
-        }
-           
+    public class Request
+    { 
+        public string Url { get; set; }
     }
-
 }

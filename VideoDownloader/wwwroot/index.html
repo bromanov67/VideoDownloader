@@ -1,0 +1,50 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Video Downloader</title>
+    <link rel="icon" href="data:;base64,=">
+</head>
+<body>
+    <a href="/swagger/index.html">Swagger</a>
+
+    <input type="text" id="url" />
+    <button onclick="AddToDownload()">
+        Добавить загрузку
+    </button>
+
+    <script src="js/site.js"></script>
+    <script>
+        function AddToDownload() {
+            let urlInput = document.getElementById('url');
+            if (urlInput) {
+                let url = urlInput.value;
+
+                SendRequest({
+                    url: '/api/values/AddToDownload',
+                    body: {
+                        Url: url
+                    },
+                    success: function (xhr) {
+                        let response = JSON.parse(xhr.responseText);
+                        if (response.error) {
+                            alert(response.message);
+                        } else {
+                            var id = response.downloadId;
+                            alert('Download ID: ' + id);
+                        }
+                    },
+                    error: function (xhr) {
+                        console.error('Request failed with status: ' + xhr.status);
+                    },
+                    always: function (xhr) {
+                        console.log('Request completed');
+                    }
+                });
+            } else {
+                console.error('Элемент с ID "url" не найден.');
+            }
+        }
+    </script>
+</body>
+</html>
