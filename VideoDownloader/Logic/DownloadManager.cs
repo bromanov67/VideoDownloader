@@ -1,56 +1,46 @@
 ﻿
-using AngleSharp.Dom;
-
 namespace VideoDownloader.Logic
 {
-    public class DownloadManager
+    public partial class DownloadManager
     {
         public DownloadManager() 
         {
             Items = new List<DownloadItem>();
         }
-        public async Task <Guid> AddToQueue(string url)
+        public DownloadItem AddToQueue(string url)
         {
             var id = Guid.NewGuid();
+            var name = id.ToString() + ".mp4";
+            var fullPath = Path.Combine(Globals.Settings.VideoFolderPath, name);
+
             var item = new DownloadItem
             {
                 Id = id,
-                State = State.Wait,
+                State = DownloadItemState.Wait,
                 Url = url,
-                Name = id.ToString() + ".mp4",
+                Name = name,
+                FullPath = fullPath,
             };
             Items.Add(item);
 
-            return id;
+            return item;
         }
 
         internal void DownloadFromQueue()
         {
-            var downloadItems = Items.FirstOrDefault(x => x.State == State.Wait);
+            var downloadItems = Items.FirstOrDefault(x => x.State == DownloadItemState.Wait);
             if (downloadItems != null)
             {
-                downloadItems.State = State.InProcess;
-                Downloader.ASD(downloadItems.Url, downloadItems.Name)
+
+                downloadItems.State = DownloadItemState.InProcess;
+                var info = Downloader.Download(downloadItems.Url, downloadItems.Name)
                     .GetAwaiter()
                     .GetResult();
-                downloadItems.State = State.Ready;
+                downloadItems.State = DownloadItemState.Ready;
+                downloadItems.Info = info;
             }
         }
 
         public List<DownloadItem> Items { get; set; }
-        public class DownloadItem
-        {
-            public Guid Id { get; set; }
-            public State State { get; set; }
-            public string Url { get; set; }
-            public string Name { get; set; }
-        }
-
-        public enum State
-        {
-            Wait = 0,
-            InProcess = 1,
-            Ready = 2,
-        }
     }
 }

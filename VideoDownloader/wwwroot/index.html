@@ -6,9 +6,14 @@
     <link rel="icon" href="data:;base64,=">
 </head>
 <body>
-    <a href="/swagger/index.html">Swagger</a>
+ <!--   <a href="/swagger/index.html">Swagger</a>-->
 
-    <input type="text" id="url" />
+    <input type="text" id="url" style="width: 25%"/>
+
+    <div id="myVideos">
+
+    </div>
+
     <button onclick="AddToDownload()">
         Добавить загрузку
     </button>
@@ -30,8 +35,21 @@
                         if (response.error) {
                             alert(response.message);
                         } else {
+                            var videosDiv = document.getElementById('myVideos');
                             var id = response.downloadId;
-                            alert('Download ID: ' + id);
+
+                            let div = document.createElement('div');
+                            div.setAttribute("state", "Wait");
+                            div.setAttribute("videoId", id);
+                            div.classList.add('my-video');
+                            videosDiv.appendChild(div);
+
+
+                            let label2 = document.createElement('label');
+                            div.appendChild(label2);
+                            label2.textContent = url;
+
+                            document.getElementById('url').value = "";
                         }
                     },
                     error: function (xhr) {
@@ -41,10 +59,59 @@
                         console.log('Request completed');
                     }
                 });
-            } else {
-                console.error('Элемент с ID "url" не найден.');
             }
         }
+
+        setInterval(function () {
+            let videoDivs = document.getElementsByClassName('my-video');
+            for (let i = 0; i < videoDivs.length; i++) {
+                if (videoDivs[i].getAttribute('state') !== "Ready") {
+                    let videoId = videoDivs[i].getAttribute('videoId');
+                    SendRequest({
+                        url: '/api/values/state/' + videoId,
+                        method: 'GET',
+                        success: function (xhr) {
+                            let response = JSON.parse(xhr.responseText);
+                            if (response.error) {
+                                alert(response.message);
+                            } else {
+                                videoDivs[i].setAttribute('state', response.state);
+                                for (let j = 0; j < videoDivs[i].childNodes.length; j++) {
+                                    if (videoDivs[i].childNodes[j].className === "state") {
+                                        videoDivs[i].childNodes[j].textContent = "response.state"
+                                    }
+                                }
+
+                                if (response.state === "Ready") {
+                                    let href = document.createElement('a');
+                                    href.setAttribute('href', "/api/values/download/" + videoId);
+                                    href.textContent = "Download";
+                                    videoDivs[i].appendChild(href);
+                                }
+                            }
+                        },
+                        error: function (xhr) {
+                            console.error('Request failed with status: ' + xhr.status);
+                        },
+                        always: function (xhr) {
+                            console.log('Request completed');
+                        }
+                    });
+                }
+            }
+            console.log("tick-tack");
+        }, 5000);
     </script>
+
+
+    <style>
+        .my-video {
+            margin-left: 10%;
+        }
+        .my-video   label {
+            display:block;
+        }
+
+    </style>
 </body>
 </html>

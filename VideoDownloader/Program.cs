@@ -1,4 +1,5 @@
-using Microsoft.Extensions.FileProviders;
+ using Microsoft.Extensions.FileProviders;
+using VideoDownloader.Logic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<TimedHostedService>();
 var app = builder.Build();
+
+Globals.Settings = new Settings
+{
+    VideoFolderPath = builder.Configuration["VideoFolderPath"]
+};
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -28,3 +34,4 @@ app.MapControllers();
 
 
 app.Run();
+ 
